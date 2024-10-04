@@ -1,5 +1,6 @@
 #include <iostream>
 #include <MemoryDummy.h>
+#include <raw.h>
 
 using namespace std;
 void info(void);
@@ -41,8 +42,8 @@ int main(int argc, char** argv)
 			cout << "File bigger than " << fileSize << "kB in memory" << endl;
 			break;
 		}
-		//auto f1 = new FileMemory(argv[i], memoryDummy);
-		//f1->write(file);
+		auto f1 = new FileMemory(argv[i], memoryDummy);
+		f1->write(file.c_str(),file.size());
 	}
 
 	char* data = new char[1024 * memSize];

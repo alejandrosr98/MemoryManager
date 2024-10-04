@@ -1,17 +1,34 @@
 #ifndef RAWFILE_H
 #define RAWFILE_H
 
-class FileMemory
+#include <MemoryDummy.h>
+#include <string>
+
+class FileMemoryBase
 {
 	public:
-		FileMemory(string _filename, MemoryDummy _memory) : memory_(_memory) {}
-		int write(uint8_t _data);
-		int write(uint8_t* _data, uint32_t _size);
-		int read(uint8_t& _data);
-		int read(uint8_t* _data, uint32_t _size);
+		FileMemoryBase(MemoryDummy* _memory) : memory_(_memory) {}
+		virtual int write(const char _data) = 0;
+		virtual int write(const char* _data, uint32_t _size) = 0;
+		virtual int read(const char& _data) = 0;
+		virtual int read(const char* _data, uint32_t _size) = 0;
+
+	protected:
+		MemoryDummy* memory_;
+};
+
+class FileMemory : public FileMemoryBase
+{
+	public:
+		FileMemory(std::string _filename, MemoryDummy* _memory) : FileMemoryBase(_memory) {}
+		int write(const char _data);
+		int write(const char* _data, uint32_t _size);
+		int read(const char& _data);
+		int read(const char* _data, uint32_t _size);
 
 	private:
-		MemoryDummy memory_;
+		uint32_t writeIndex = 0;
+		uint32_t readIndex = 0;
 };
 
 #endif
