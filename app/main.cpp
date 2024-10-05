@@ -50,14 +50,22 @@ int main(int argc, char** argv)
 	memoryDummy->readBytes(0, (uint8_t*)data, 1024 * memSize);
 
 	FILE* out = fopen("eeprom.hex", "w");
-	for (uint16_t i = 0; i < 1024 * memSize; i += 16)
+	for (uint16_t i = 0, int j = 0; i < 1024 * memSize; i += j)
 	{
 		fprintf(out, ":10%04X00", i);
 		uint8_t checksum = 16 + (uint8_t)((i & 0xFF00) >> 8) + (uint8_t)(i & 0xFF);
-		for (int j = 0; j < 16; j++)
+		for (j = 0; j < 16; j++)
 		{
-			fprintf(out, "%02X", (uint8_t)data[i + j]);
-			checksum += data[i + j];
+			if (data[i + j] != 0xFF)
+			{
+				fprintf(out, "%02X", (uint8_t)data[i + j]);
+				checksum += data[i + j];
+			}
+			else
+			{
+				j++;
+				break;
+			}
 		}
 		checksum = 0xFF - checksum + 1;
 		fprintf(out, "%02X\n", checksum);
