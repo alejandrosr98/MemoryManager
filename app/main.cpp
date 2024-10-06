@@ -48,14 +48,17 @@ int main(int argc, char** argv)
 
 	char* data = new char[1024 * memSize];
 	memoryDummy->readBytes(0, (uint8_t*)data, 1024 * memSize);
+	//cout << data << endl;
 
 	FILE* out = fopen("eeprom.hex", "w");
-	for (uint16_t i = 0, int j = 0; i < 1024 * memSize; i += j)
+	for (uint16_t i = 0, j = 0; i < 1024 * memSize; i += j)
 	{
+		cout << "i: " << i << " j: " << j << endl;
 		fprintf(out, ":10%04X00", i);
 		uint8_t checksum = 16 + (uint8_t)((i & 0xFF00) >> 8) + (uint8_t)(i & 0xFF);
 		for (j = 0; j < 16; j++)
 		{
+			printf("%02X\n", (uint8_t)data[i + j]);
 			if (data[i + j] != 0xFF)
 			{
 				fprintf(out, "%02X", (uint8_t)data[i + j]);
