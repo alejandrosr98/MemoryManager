@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: Build Memory Manager
 
 on:
   workflow_dispatch:
@@ -14,7 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        outDir: [build, build\Release\*.exe]
         build_type: [Release]
+        exclude:
+          - os: windows-latest
+            outDir: build
+          - os: ubuntu-latest
+            outDir: build\Release\*.exe
 
     steps:
     - uses: actions/checkout@v4
@@ -37,3 +43,7 @@ jobs:
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ${{matrix.outDir}}
