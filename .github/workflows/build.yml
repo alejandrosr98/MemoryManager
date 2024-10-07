@@ -20,7 +20,7 @@ jobs:
           - os: windows-latest
             outDir: build/memoryManager
           - os: ubuntu-latest
-            outDir: build\Release\*.exe
+            outDir: build\Release\memoryManager.exe
 
     steps:
     - uses: actions/checkout@v4
