@@ -15,6 +15,7 @@ int main(int argc, char** argv)
 
 	bool eepromInfo = false;
 	bool fileInfo = false;
+	bool clearByteInfo = false;
 
 	unsigned int memSize = 0;
 	unsigned int fileSize = 0;
@@ -69,7 +70,13 @@ int main(int argc, char** argv)
 						info();
 						return 0;
 					}
-					else if ((i >= argc - 1) || (argv[i + 1][0] == '-'))
+					else if (i >= argc - 1)
+					{
+						cout << "Not enough arguments for file names." << endl;
+						info();
+						return 0;
+					}
+					else if (argv[i + 1][0] == '-')
 					{
 						cout << "Not enough arguments for file names." << endl;
 						info();
@@ -88,6 +95,38 @@ int main(int argc, char** argv)
 					}
 					break;
 				case 'b':
+					if (clearByteInfo)
+					{
+						cout << "Argument -" << argv[i][1] << " already entered." << endl;
+						info();
+						return 0;
+					}
+					else if (i >= argc - 1)
+					{
+						cout << "Not enough arguments for not flashed bytes info." << endl;
+						info();
+						return 0;
+					}
+					else if (argv[i + 1][0] == '-')
+					{
+						cout << "Not enough arguments for not flashed bytes info." << endl;
+						info();
+						return 0;
+					}
+					else
+					{
+						i++;
+						unsigned long voidByte = stoul(argv[i], nullptr, 16);
+						if (voidByte > 0xFF)
+						{
+							cout << "WARNING: Not flashed bytes representation should not be longer than one byte. Default value 0xFF will be used." << endl;
+						}
+						else
+						{
+							clearedBytes = (uint8_t)voidByte;
+						}
+						clearByteInfo = true;
+					}
 					break;
 				default:
 					cout << "Argument -" << argv[i][1] << " not supported." << endl;
@@ -109,6 +148,12 @@ int main(int argc, char** argv)
 	}
 
 	unsigned int filesPerMem = memSize / fileSize;
+	if (filesPerMem == 0)
+	{
+		cout << "EEPROM settings: A file could be greater than the memory size." << endl;
+		info();
+		return 0;
+	}
 	if (filesPerMem < fileNumber)
 	{
 		cout << "WARNING: More files entered than the memory supports. The first ones will be used until the memory capacity" << endl;
@@ -124,8 +169,11 @@ int main(int argc, char** argv)
 	for (int i = 0; i < fileNumber; i++)
 	{
 		fileList[i] = argv[fileIndex + i];
-		cout << "\t-" << fileList[i] << endl;
+		cout << "\t-> " << fileList[i] << endl;
 	}
+
+	cout << "Void bytes: ";
+	printf("0x%02X\n\n", clearedBytes);
 
 	auto memoryDummy = new MemoryDummy(memSize * 1024, clearedBytes);
 
@@ -162,13 +210,13 @@ int main(int argc, char** argv)
 	FILE* out = fopen("eeprom.hex", "w");
 	for (uint16_t i = 0, j = 0; i < 1024 * memSize; i += j)
 	{
-		if ((uint8_t)data[i] != 0xFF)
+		if ((uint8_t)data[i] != clearedBytes)
 		{
 			fprintf(out, ":10%04X00", i);
 			uint8_t checksum = 16 + (uint8_t)((i & 0xFF00) >> 8) + (uint8_t)(i & 0xFF);
 			for (j = 0; j < 16; j++)
 			{
-				if ((uint8_t)data[i + j] != 0xFF)
+				if ((uint8_t)data[i + j] != clearedBytes)
 				{
 					fprintf(out, "%02X", (uint8_t)data[i + j]);
 					checksum += data[i + j];
@@ -196,9 +244,9 @@ int main(int argc, char** argv)
 void info(void)
 {
 	cout << "Incorrect arguments. The correct format is:" << endl;
-	cout << "Mandatory" << endl;
+	cout << "Mandatory:" << endl;
 	cout << "\t-e\tParams for EEPROM: <size in kb> <max size per file in kb>. Both." << endl;
 	cout << "\t-f\tFile names: <file1> <file2> ... At least one." << endl;
 	cout << "Options:" << endl;
-	cout << "\t-b\tNot flashed bytes representation in hex format. Default 0xFF" << endl;
+	cout << "\t-b\tNot flashed bytes representation in hex format. Only one byte long. Default 0xFF." << endl;
 }
