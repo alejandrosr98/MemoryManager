@@ -14,11 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        outDir: [build\memoryManager, build\Release\memoryManager.exe]
+        outDir: [build/memoryManager, build\Release\memoryManager.exe]
         build_type: [Release]
         exclude:
           - os: windows-latest
-            outDir: build\memoryManager
+            outDir: build/memoryManager
           - os: ubuntu-latest
             outDir: build\Release\memoryManager.exe
 
