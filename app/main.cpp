@@ -7,23 +7,133 @@ void info(void);
 
 int main(int argc, char** argv)
 {
-	if (argc < 3)
+	if (argc < 6)
 	{
 		info();
 		return 0;
 	}
 
-	unsigned int memSize = atoi(argv[1]);
-	unsigned int fileSize = atoi(argv[2]);
+	bool eepromInfo = false;
+	bool fileInfo = false;
+
+	unsigned int memSize = 0;
+	unsigned int fileSize = 0;
+
+	char** fileList;
+	int fileIndex;
+	int fileNumber;
+
+	uint8_t clearedBytes = 0xFF;
+
+	for (int i = 1; i < argc; i++)
+	{
+		if (argv[i][0] == '-')
+		{
+			switch (argv[i][1])
+			{
+				case 'e':
+					if (eepromInfo)
+					{
+						cout << "Argument -" << argv[i][1] << " already entered." << endl;
+						info();
+						return 0;
+					}
+					else if (i >= argc - 2)
+					{
+						cout << "Not enough arguments for EEPROM information." << endl;
+						info();
+						return 0;
+					}
+					else if ('0' <= argv[i + 1][0] && argv[i + 1][0] <= '9' && '0' <= argv[i + 2][0] && argv[i + 2][0] <= '9')
+					{
+						memSize = atoi(argv[i + 1]);
+						fileSize = atoi(argv[i + 2]);
+						eepromInfo = true;
+						i += 2;
+						if (memSize == 0 || fileSize == 0)
+						{
+							info();
+							return 0;
+						}
+					}
+					else
+					{
+						info();
+						return 0;
+					}
+					break;
+				case 'f':
+					if (fileInfo)
+					{
+						cout << "Argument -" << argv[i][1] << " already entered." << endl;
+						info();
+						return 0;
+					}
+					else if ((i >= argc - 1) || (argv[i + 1][0] == '-'))
+					{
+						cout << "Not enough arguments for file names." << endl;
+						info();
+						return 0;
+					}
+					else
+					{
+						fileNumber = 0;
+						while ((i + 1 + fileNumber) < argc && argv[i + 1 + fileNumber][0] != '-')
+						{
+							fileNumber++;
+						}
+						fileIndex = i + 1;
+						i += fileNumber;
+						fileInfo = true;
+					}
+					break;
+				case 'b':
+					break;
+				default:
+					cout << "Argument -" << argv[i][1] << " not supported." << endl;
+					info();
+					return 0;
+			}
+		}
+		else
+		{
+			info();
+			return 0;
+		}
+	}
+
+	if (!eepromInfo || !fileInfo)
+	{
+		info();
+		return 0;
+	}
+
 	unsigned int filesPerMem = memSize / fileSize;
+	if (filesPerMem < fileNumber)
+	{
+		cout << "WARNING: More files entered than the memory supports. The first ones will be used until the memory capacity" << endl;
+		fileNumber = filesPerMem;
+	}
 
-	auto memoryDummy = new MemoryDummy(memSize * 1024);
+	fileList = new char* [fileNumber];
 
-	for (int i = 3; i < argc && ((unsigned int)(i - 3) < filesPerMem); i++)
+	cout << "Memory Size: " << memSize << " kb. Max File Size: " << fileSize << " kb." << endl;
+	cout << "File number: " << fileNumber << endl;
+	cout << "File list:" << endl;
+
+	for (int i = 0; i < fileNumber; i++)
+	{
+		fileList[i] = argv[fileIndex + i];
+		cout << "\t-" << fileList[i] << endl;
+	}
+
+	auto memoryDummy = new MemoryDummy(memSize * 1024, clearedBytes);
+
+	for (int i = 0; i < fileNumber; i++)
 	{
 		char dataRead[100];
 		string file = "";
-		FILE* f = fopen(argv[i], "r");
+		FILE* f = fopen(fileList[i], "r");
 		if (f == NULL)
 		{
 			cout << "No se abre el archivo" << endl;
@@ -35,7 +145,7 @@ int main(int argc, char** argv)
 		}
 
 		fclose(f);
-		cout << file << endl << "Fin del archivo " << i - 2 << endl << endl;
+		cout << file << endl << "Fin del archivo " << i + 1 << endl << endl;
 
 		if (file.size() > fileSize * 1024)
 		{
@@ -86,6 +196,9 @@ int main(int argc, char** argv)
 void info(void)
 {
 	cout << "Incorrect arguments. The correct format is:" << endl;
-	cout << "Params for EEPROM: <size in kb> <max size per file in kb>. Both" << endl;
-	cout << "File names: <file1> <file2> ..." << endl;
+	cout << "Mandatory" << endl;
+	cout << "\t-e\tParams for EEPROM: <size in kb> <max size per file in kb>. Both." << endl;
+	cout << "\t-f\tFile names: <file1> <file2> ... At least one." << endl;
+	cout << "Options:" << endl;
+	cout << "\t-b\tNot flashed bytes representation in hex format. Default 0xFF" << endl;
 }
