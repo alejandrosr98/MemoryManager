@@ -15,13 +15,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         outDir: [build/memoryManager, build\Release\memoryManager.exe]
-        tag: [windows, linux]
+        tag: [windows, ubuntu]
         build_type: [Release]
         exclude:
           - os: windows-latest
             outDir: build/memoryManager
           - os: ubuntu-latest
             outDir: build\Release\memoryManager.exe
+          - os: windows-latest
+            tag: ubuntu
+          - os: ubuntu-latest
+            tag: windows
 
     steps:
     - uses: actions/checkout@v4
