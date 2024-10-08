@@ -15,15 +15,23 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         outDir: [build/memoryManager, build\Release\memoryManager.exe]
+        tag: [windows, ubuntu]
         build_type: [Release]
         exclude:
           - os: windows-latest
             outDir: build/memoryManager
           - os: ubuntu-latest
             outDir: build\Release\memoryManager.exe
+          - os: windows-latest
+            tag: ubuntu
+          - os: ubuntu-latest
+            tag: windows
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: 'master'
+        fetch-depth: '0'
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -46,4 +54,5 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
+        name: MemoryManager-${{matrix.tag}}
         path: ${{matrix.outDir}}
