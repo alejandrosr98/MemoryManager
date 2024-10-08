@@ -15,12 +15,15 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         outDir: [build/memoryManager, build\Release\memoryManager.exe]
+        tag: [windows, linux]
         build_type: [Release]
-        include:
-          - os: ubuntu-latest
-            outDir: build/memoryManager
+        exclude:
           - os: windows-latest
+            outDir: build/memoryManager
+            tag: linux
+          - os: ubuntu-latest
             outDir: build\Release\memoryManager.exe
+            tag: windows
 
     steps:
     - uses: actions/checkout@v4
@@ -49,4 +52,5 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
+        name: MemoryManager-${{matrix.tag}}
         path: ${{matrix.outDir}}
