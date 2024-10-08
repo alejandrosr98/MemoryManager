@@ -16,14 +16,17 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         outDir: [build/memoryManager, build\Release\memoryManager.exe]
         build_type: [Release]
-        exclude:
-          - os: windows-latest
-            outDir: build/memoryManager
+        include:
           - os: ubuntu-latest
+            outDir: build/memoryManager
+          - os: windows-latest
             outDir: build\Release\memoryManager.exe
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: 'master'
+        fetch-depth: '0'
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
