@@ -20,10 +20,8 @@ jobs:
         exclude:
           - os: windows-latest
             outDir: build/memoryManager
-            tag: linux
           - os: ubuntu-latest
             outDir: build\Release\memoryManager.exe
-            tag: windows
 
     steps:
     - uses: actions/checkout@v4
