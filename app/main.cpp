@@ -1,13 +1,13 @@
 #include <iostream>
 #include <MemoryDummy.h>
-#include <raw.h>
+#include <string>
 
 using namespace std;
 void info(void);
 
 int main(int argc, char** argv)
 {
-	if (argc < 6)
+	if (argc < 5)
 	{
 		info();
 		return 0;
@@ -18,7 +18,6 @@ int main(int argc, char** argv)
 	bool clearByteInfo = false;
 
 	unsigned int memSize = 0;
-	unsigned int fileSize = 0;
 
 	char** fileList;
 	int fileIndex;
@@ -39,19 +38,18 @@ int main(int argc, char** argv)
 						info();
 						return 0;
 					}
-					else if (i >= argc - 2)
+					else if (i >= argc - 1)
 					{
 						cout << "Not enough arguments for EEPROM information." << endl;
 						info();
 						return 0;
 					}
-					else if ('0' <= argv[i + 1][0] && argv[i + 1][0] <= '9' && '0' <= argv[i + 2][0] && argv[i + 2][0] <= '9')
+					else if ('0' <= argv[i + 1][0] && argv[i + 1][0] <= '9')
 					{
 						memSize = atoi(argv[i + 1]);
-						fileSize = atoi(argv[i + 2]);
 						eepromInfo = true;
-						i += 2;
-						if (memSize == 0 || fileSize == 0)
+						i++;
+						if (memSize == 0)
 						{
 							info();
 							return 0;
@@ -147,22 +145,9 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	unsigned int filesPerMem = memSize / fileSize;
-	if (filesPerMem == 0)
-	{
-		cout << "EEPROM settings: A file could be greater than the memory size." << endl;
-		info();
-		return 0;
-	}
-	if (filesPerMem < fileNumber)
-	{
-		cout << "WARNING: More files entered than the memory supports. The first ones will be used until the memory capacity" << endl;
-		fileNumber = filesPerMem;
-	}
-
 	fileList = new char* [fileNumber];
 
-	cout << "Memory Size: " << memSize << " kb. Max File Size: " << fileSize << " kb." << endl;
+	cout << "Memory Size: " << memSize << " kb." << endl;
 	cout << "File number: " << fileNumber << endl;
 	cout << "File list:" << endl;
 
@@ -176,6 +161,7 @@ int main(int argc, char** argv)
 	printf("0x%02X\n\n", clearedBytes);
 
 	auto memoryDummy = new MemoryDummy(memSize * 1024, clearedBytes);
+	uint32_t initDir = 0;
 
 	for (int i = 0; i < fileNumber; i++)
 	{
@@ -195,13 +181,13 @@ int main(int argc, char** argv)
 		fclose(f);
 		cout << file << endl << "Fin del archivo " << i + 1 << endl << endl;
 
-		if (file.size() > fileSize * 1024)
+		if (initDir + file.size() > memSize * 1024)
 		{
-			cout << "File bigger than " << fileSize << "kB in memory" << endl;
+			cout << "WARNING: Files entered bigger than the memory capacity. The first ones will be used until the memory capacity" << endl;
 			break;
 		}
-		auto f1 = new FileMemory(argv[i], memoryDummy);
-		f1->write(file.c_str(),file.size());
+		memoryDummy->writeBytes(initDir,(uint8_t*)file.data(),file.size());
+		initDir += (uint32_t)(file.size() + 1);
 	}
 
 	char* data = new char[1024 * memSize];
@@ -245,7 +231,7 @@ void info(void)
 {
 	cout << "Incorrect arguments. The correct format is:" << endl;
 	cout << "Mandatory:" << endl;
-	cout << "\t-e\tParams for EEPROM: <size in kb> <max size per file in kb>. Both." << endl;
+	cout << "\t-e\tParams for EEPROM: <size in kb>." << endl;
 	cout << "\t-f\tFile names: <file1> <file2> ... At least one." << endl;
 	cout << "Options:" << endl;
 	cout << "\t-b\tNot flashed bytes representation in hex format. Only one byte long. Default 0xFF." << endl;
